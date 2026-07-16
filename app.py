@@ -6,34 +6,38 @@ app = Flask(__name__)
 def webhook():
     req = request.get_json()
     
-    # Получаем число воды из запроса
+    # 1. Получаем число из запроса
     number = req['queryResult']['parameters'].get('number', 0)
     
-    # Достаём старый total из контекста (если есть)
+    # 2. Читаем старый total из контекста (если есть)
     old_total = 0
     for context in req['queryResult'].get('outputContexts', []):
         if 'water-tracker' in context['name']:
             old_total = context['parameters'].get('total', 0)
+            break
     
-    # Считаем новое значение
+    # 3. Считаем новую сумму
     new_total = old_total + number
     
-    # Формируем ответ
+    # 4. Формируем ответ
     response = {
-        'fulfillmentText': f'Добавлено {number} мл. Всего выпито: {new_total} мл.',
-        'outputContexts': [
+        "fulfillmentText": f"Добавлено {number} мл. Всего выпито: {new_total} мл.",
+        "outputContexts": [
             {
-                'name': req['queryResult']['outputContexts'][0]['name'] if req['queryResult'].get('outputContexts') else f"{req['session']}/contexts/water-tracker",
-                'lifespanCount': 99,
-                'parameters': {'total': new_total}
+                "name": req['queryResult']['outputContexts'][0]['name'] if req['queryResult'].get('outputContexts') else f"{req['session']}/contexts/water-tracker",
+                "lifespanCount": 99,
+                "parameters": {
+                    "total": new_total
+                }
             }
         ]
     }
+    
     return jsonify(response)
 
 @app.route('/')
 def home():
-    return 'Water counter bot is running!'
+    return "Water counter bot is running!"
 
 if __name__ == '__main__':
     app.run(port=5000)
